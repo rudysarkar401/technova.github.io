@@ -14,13 +14,46 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      user_interactions: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          id: string
+          interaction_type: string
+          product_id: number
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          interaction_type: string
+          product_id: number
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          interaction_type?: string
+          product_id?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_product_recommendations: {
+        Args: { p_limit?: number; p_user_id: string }
+        Returns: {
+          product_id: number
+          reason: string
+          score: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

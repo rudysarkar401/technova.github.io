@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Zap, Shield, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/ProductCard';
+import { RecommendedProducts } from '@/components/RecommendedProducts';
 import heroBanner from '@/assets/hero-banner.jpg';
 
 interface Product {
@@ -102,6 +103,9 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Recommended Products */}
+      <RecommendedProducts />
 
       {/* Featured Products */}
       <section className="py-16">

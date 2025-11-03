@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface CartItem {
   id: number;
@@ -35,7 +36,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('technova_cart', JSON.stringify(items));
   }, [items]);
 
-  const addToCart = (product: Omit<CartItem, 'quantity'>) => {
+  const addToCart = async (product: Omit<CartItem, 'quantity'>) => {
     setItems((prev) => {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
@@ -47,6 +48,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       toast.success('Added to cart');
       return [...prev, { ...product, quantity: 1 }];
     });
+
+    // Track cart addition
+    try {
+      const storedUser = localStorage.getItem('technova_user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        await supabase.from('user_interactions').insert({
+          user_id: user.id,
+          product_id: product.id,
+          interaction_type: 'cart_add',
+        });
+      }
+    } catch (error) {
+      console.error('Error tracking cart addition:', error);
+    }
   };
 
   const removeFromCart = (id: number) => {

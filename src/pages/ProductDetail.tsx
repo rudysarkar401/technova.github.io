@@ -4,6 +4,7 @@ import { ShoppingCart, Star, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { Badge } from '@/components/ui/badge';
+import { useInteractionTracking } from '@/hooks/useInteractionTracking';
 
 interface Product {
   id: number;
@@ -19,6 +20,7 @@ const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { trackInteraction } = useInteractionTracking();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,6 +30,8 @@ const ProductDetail = () => {
       .then((data) => {
         setProduct(data);
         setLoading(false);
+        // Track product view
+        trackInteraction(data.id, 'view', data.category);
       })
       .catch((error) => {
         console.error('Error fetching product:', error);

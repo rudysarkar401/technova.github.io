@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
@@ -46,7 +47,7 @@ const Checkout = () => {
     setProcessing(true);
 
     // Simulate payment processing (DEMO ONLY)
-    setTimeout(() => {
+    setTimeout(async () => {
       const orderId = `TN${Date.now()}`;
       const order = {
         id: orderId,
@@ -60,6 +61,23 @@ const Checkout = () => {
       const orders = JSON.parse(localStorage.getItem('technova_orders') || '[]');
       orders.push(order);
       localStorage.setItem('technova_orders', JSON.stringify(orders));
+
+      // Track purchases
+      const storedUser = localStorage.getItem('technova_user');
+      if (storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+          const purchases = items.map((item) => ({
+            user_id: user.id,
+            product_id: item.id,
+            interaction_type: 'purchase',
+          }));
+          
+          await supabase.from('user_interactions').insert(purchases);
+        } catch (error) {
+          console.error('Error tracking purchases:', error);
+        }
+      }
 
       clearCart();
       toast.success(`Payment via ${getPaymentMethodName()} successful! (Demo)`);
