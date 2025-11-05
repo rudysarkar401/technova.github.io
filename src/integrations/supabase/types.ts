@@ -91,6 +91,8 @@ export type Database = {
       get_admin_analytics: {
         Args: never
         Returns: {
+          daily_interactions: Json
+          interaction_types_trend: Json
           popular_categories: Json
           recent_interactions: Json
           total_cart_adds: number

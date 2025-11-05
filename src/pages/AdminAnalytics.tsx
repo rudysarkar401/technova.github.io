@@ -11,9 +11,43 @@ import {
   CreditCard,
   Eye,
   TrendingUp,
-  Shield
+  Shield,
+  BarChart3,
+  Activity
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { 
+  LineChart, 
+  Line, 
+  AreaChart, 
+  Area, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  Legend,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
+
+interface DailyInteraction {
+  date: string;
+  views: number;
+  cart_adds: number;
+  purchases: number;
+  total: number;
+}
+
+interface InteractionTypeTrend {
+  date: string;
+  view: number;
+  cart_add: number;
+  purchase: number;
+}
 
 interface AnalyticsData {
   total_users: number;
@@ -29,7 +63,11 @@ interface AnalyticsData {
     category: string;
     created_at: string;
   }>;
+  daily_interactions: DailyInteraction[];
+  interaction_types_trend: InteractionTypeTrend[];
 }
+
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
 const AdminAnalytics = () => {
   const { isAdmin, loading: adminLoading } = useAdmin();
@@ -59,6 +97,8 @@ const AdminAnalytics = () => {
             ...data[0],
             popular_categories: (data[0].popular_categories as any) || [],
             recent_interactions: (data[0].recent_interactions as any) || [],
+            daily_interactions: (data[0].daily_interactions as any) || [],
+            interaction_types_trend: (data[0].interaction_types_trend as any) || [],
           });
         }
       } catch (error) {
@@ -150,6 +190,120 @@ const AdminAnalytics = () => {
             <CardContent>
               <div className="text-2xl font-bold">{analytics?.total_purchases || 0}</div>
               <p className="text-xs text-muted-foreground">Completed orders</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid lg:grid-cols-2 gap-6 mb-6">
+          {/* Daily Interactions Trend */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-primary" />
+                <CardTitle>30-Day Activity Trend</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {analytics?.daily_interactions && analytics.daily_interactions.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={analytics.daily_interactions}>
+                    <defs>
+                      <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorCartAdds" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--secondary))" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="hsl(var(--secondary))" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorPurchases" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis 
+                      dataKey="date" 
+                      tickFormatter={(date) => format(new Date(date), 'MMM d')}
+                      className="text-xs"
+                    />
+                    <YAxis className="text-xs" />
+                    <Tooltip 
+                      labelFormatter={(date) => format(new Date(date), 'MMM d, yyyy')}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))', 
+                        border: '1px solid hsl(var(--border))' 
+                      }}
+                    />
+                    <Legend />
+                    <Area 
+                      type="monotone" 
+                      dataKey="views" 
+                      stroke="hsl(var(--primary))" 
+                      fillOpacity={1} 
+                      fill="url(#colorViews)" 
+                      name="Views"
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="cart_adds" 
+                      stroke="hsl(var(--secondary))" 
+                      fillOpacity={1} 
+                      fill="url(#colorCartAdds)" 
+                      name="Cart Adds"
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="purchases" 
+                      stroke="hsl(var(--accent))" 
+                      fillOpacity={1} 
+                      fill="url(#colorPurchases)" 
+                      name="Purchases"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-muted-foreground text-center py-8">No data available</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Interaction Types Over Time */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                <CardTitle>7-Day Interaction Breakdown</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {analytics?.interaction_types_trend && analytics.interaction_types_trend.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={analytics.interaction_types_trend}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis 
+                      dataKey="date" 
+                      tickFormatter={(date) => format(new Date(date), 'MMM d')}
+                      className="text-xs"
+                    />
+                    <YAxis className="text-xs" />
+                    <Tooltip 
+                      labelFormatter={(date) => format(new Date(date), 'MMM d, yyyy')}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))', 
+                        border: '1px solid hsl(var(--border))' 
+                      }}
+                    />
+                    <Legend />
+                    <Bar dataKey="view" fill="hsl(var(--primary))" name="Views" />
+                    <Bar dataKey="cart_add" fill="hsl(var(--secondary))" name="Cart Adds" />
+                    <Bar dataKey="purchase" fill="hsl(var(--accent))" name="Purchases" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-muted-foreground text-center py-8">No data available</p>
+              )}
             </CardContent>
           </Card>
         </div>
