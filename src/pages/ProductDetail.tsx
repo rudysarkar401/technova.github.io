@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Star, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, Star, ArrowLeft, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { Badge } from '@/components/ui/badge';
 import { useInteractionTracking } from '@/hooks/useInteractionTracking';
 import { productApi } from '@/services/productApi';
+import { recommendationEngine } from '@/services/recommendationEngine';
+import { ProductCard } from '@/components/ProductCard';
 
 interface Product {
   id: number;
@@ -23,7 +25,9 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const { trackInteraction } = useInteractionTracking();
   const [product, setProduct] = useState<Product | null>(null);
+  const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingSimilar, setLoadingSimilar] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -33,6 +37,17 @@ const ProductDetail = () => {
           setProduct(data);
           // Track product view
           trackInteraction(data.id, 'view', data.category);
+          
+          // Fetch similar products
+          setLoadingSimilar(true);
+          const similar = await recommendationEngine.getSimilarProducts(
+            data.id,
+            data.category,
+            data.price,
+            4
+          );
+          setSimilarProducts(similar);
+          setLoadingSimilar(false);
         }
       } catch (error) {
         console.error('Error fetching product:', error);
@@ -127,6 +142,30 @@ const ProductDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* Similar Products Section */}
+        {similarProducts.length > 0 && (
+          <section className="mt-16 pt-16 border-t border-border">
+            <div className="flex items-center gap-2 mb-8">
+              <Sparkles className="h-6 w-6 text-primary" />
+              <h2 className="text-3xl font-bold">Similar Products</h2>
+            </div>
+
+            {loadingSimilar ? (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-[400px] rounded-lg bg-muted animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {similarProducts.map((product) => (
+                  <ProductCard key={product.id} {...product} />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </div>
   );
